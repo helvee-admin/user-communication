@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+/local/
+/.agents/skills/customer-reply/references/products/*.md
+!/.agents/skills/customer-reply/references/products/template.md
+!/.agents/skills/customer-reply/references/products/example-notes.md
