@@ -10,16 +10,6 @@ REFERENCES = Path(__file__).resolve().parent / ".agents/skills/customer-reply/re
 PROFILE_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 
-def profile_ids(value, field):
-    if not isinstance(value, list) or any(
-        not isinstance(item, str) or PROFILE_ID.fullmatch(item) is None for item in value
-    ):
-        raise ValueError(f"{field} 需要由小写字母、数字和连字符组成的 ID 列表")
-    if len(value) != len(set(value)):
-        raise ValueError(f"{field} 中有重复 ID")
-    return value
-
-
 def read_profile(directory, profile_id):
     if not isinstance(profile_id, str) or PROFILE_ID.fullmatch(profile_id) is None:
         raise ValueError(f"无效的 {directory} ID：{profile_id!r}")
@@ -36,36 +26,15 @@ def render(product_override):
     config = json.loads((REFERENCES / "config.json").read_text(encoding="utf-8"))
     if not isinstance(config, dict):
         raise ValueError("config.json 需要是一个 JSON 对象")
-    roles = profile_ids(config.get("roles"), "roles")
-    voices = profile_ids(config.get("voices"), "voices")
-    if config.get("default_voice") not in voices:
-        raise ValueError("default_voice 必须是已启用的语气 ID")
-    role_voices = config.get("role_voices", {})
-    if not isinstance(role_voices, dict) or any(
-        role not in roles or voice not in voices for role, voice in role_voices.items()
-    ):
-        raise ValueError("role_voices 只能关联已启用的角色和语气")
-
     product = config.get("product")
     if product_override is not None:
         product = None if product_override == "none" else product_override
-    config = {
-        "product": product,
-        "roles": roles,
-        "voices": voices,
-        "default_voice": config["default_voice"],
-        "role_voices": role_voices,
-    }
     sections = [
         "# 用户回复 Skill",
-        "使用本文件中的回复规则和配置处理运营者后续贴来的用户消息。以下是完整的规则和已选资料。"
-        "运营者明确另行提供的模块也可按其指定范围使用。",
+        "使用本文件中的固定人设和规则，处理运营者随后粘贴的用户原话。",
+        (REFERENCES / "persona.md").read_text(encoding="utf-8").strip(),
         (REFERENCES / "reply-rules.md").read_text(encoding="utf-8").strip(),
-        "# 当前配置\n\n```json\n" + json.dumps(config, ensure_ascii=False, indent=2) + "\n```",
     ]
-    for directory, label, ids in (("roles", "角色", roles), ("voices", "语气", voices)):
-        for profile_id in ids:
-            sections.append(f"## {label} `{profile_id}`\n\n{read_profile(directory, profile_id)}")
     if product is None:
         sections.append("# 产品资料\n\n当前未选择产品。需要产品事实时，请运营者提供相应资料。")
     else:

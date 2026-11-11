@@ -1,7 +1,3 @@
 {
-  "product": null,
-  "roles": ["support", "campaign", "feedback", "community"],
-  "voices": ["natural", "playful"],
-  "default_voice": "natural",
-  "role_voices": {}
+  "product": null
 }
